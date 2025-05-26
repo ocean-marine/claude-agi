@@ -9,6 +9,9 @@ on:
         default: 'main'
         type: string
 
+permissions:
+  contents: write
+
 jobs:
   move-workflows:
     runs-on: ubuntu-latest
