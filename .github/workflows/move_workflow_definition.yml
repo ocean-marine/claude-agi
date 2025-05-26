@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.branch }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN }}
       
       - name: Check if source directory exists
         id: check-source
@@ -60,21 +60,21 @@ jobs:
           
           echo "Cleaned up _github/workflows/ directory"
       
-      - name: Commit and push changes
+      - name: Create Pull Request
         if: steps.check-source.outputs.source_exists == 'true'
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          
-          git add .
-          
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "Move workflow definitions from _github/workflows to .github/workflows"
-            git push
-            echo "Changes committed and pushed successfully"
-          fi
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Move workflow definitions from _github/workflows to .github/workflows"
+          title: "Move workflow definitions"
+          body: |
+            This PR moves workflow files from `_github/workflows/` to `.github/workflows/`
+            
+            Changes:
+            - Moved all .yml files to the correct location
+            - Cleaned up source directory (only .gitkeep remains)
+          branch: move-workflows-${{ github.run_id }}
+          delete-branch: true
       
       - name: Summary
         run: |
