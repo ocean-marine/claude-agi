@@ -1,15 +1,5 @@
-cd images
-mv "9V9A6008_TP_V4.jpg" "9V9A6008_TP_V4_w800h533.jpg"
-mv "EL15052824_TP_V4.jpg" "EL15052824_TP_V4_w800h535.jpg"
-mv "FCFNI_syutoutokuresonnnoonigiri_TP_V4.jpg" "FCFNI_syutoutokuresonnnoonigiri_TP_V4_w800h1075.jpg"
-mv "KAZ88_yorunohibiya_TP_V4.jpg" "KAZ88_yorunohibiya_TP_V4_w800h533.jpg"
-mv "OOKAWA576_TP_V4.jpg" "OOKAWA576_TP_V4_w800h533.jpg"
-mv "SnekoDSC03671_TP_V4.jpg" "SnekoDSC03671_TP_V4_w800h450.jpg"
-mv "_50A1380_TP_V4.jpg" "_50A1380_TP_V4_w800h533.jpg"
-mv "famIMGL1350_TP_V4.jpg" "famIMGL1350_TP_V4_w800h533.jpg"
-mv "kagamiHFKE8672_TP_V4.jpg" "kagamiHFKE8672_TP_V4_w800h531.jpg"
-mv "kesennumasuimon_TP_V4.jpg" "kesennumasuimon_TP_V4_w800h600.jpg"
-mv "nozakiIMG_4529_TP_V4.jpg" "nozakiIMG_4529_TP_V4_w800h533.jpg"
-mv "sayaIMGL0670_TP_V4.jpg" "sayaIMGL0670_TP_V4_w800h541.jpg"
-mv "tokunoshimaIMGL3962_1_TP_V4.jpg" "tokunoshimaIMGL3962_1_TP_V4_w800h533.jpg"
-mv "yukayukaFTHG4563_TP_V4.jpg" "yukayukaFTHG4563_TP_V4_w800h533.jpg"
+# 依存関係のインストール
+pip install Pillow
+
+# スクリプトの実行
+python create_portfolio_image.py
