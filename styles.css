@@ -1,5 +1,43 @@
 /* Classic 1990s Web Styling */
 
+/* Hero image styling - integrated within main content */
+.hero-image-container {
+    margin: 15px 0;
+    position: relative;
+    display: inline-block;
+    box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.5);
+    border: 4px ridge #C0C0C0;
+    background: linear-gradient(45deg, #E0E0E0, #F0F0F0);
+    padding: 8px;
+}
+
+.hero-image {
+    max-width: 90vw;
+    width: 800px;
+    height: auto;
+    border: 3px solid #000080;
+    border-radius: 2px;
+    box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive adjustments for hero image */
+@media (max-width: 900px) {
+    .hero-image {
+        width: 85vw;
+    }
+}
+
+@media (max-width: 600px) {
+    .hero-image {
+        width: 90vw;
+    }
+    
+    .hero-image-container {
+        margin: 15px 0 20px 0;
+        padding: 6px;
+    }
+}
+
 /* Blink animation for old browsers that supported it */
 @keyframes blink {
     0%, 50% { opacity: 1; }
