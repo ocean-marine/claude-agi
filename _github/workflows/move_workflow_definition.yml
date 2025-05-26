@@ -1,0 +1,59 @@
+name: Move Workflow Definitions
+
+on:
+  pull_request:
+    paths:
+      - '_github/workflows/*.yml'
+      - '_github/workflows/*.yaml'
+
+jobs:
+  move-workflows:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout source branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Create .github/workflows directory if it doesn't exist
+        run: mkdir -p .github/workflows
+        
+      - name: Move workflow files
+        run: |
+          # Check if there are any .yml or .yaml files to move
+          if ls _github/workflows/*.yml _github/workflows/*.yaml 1> /dev/null 2>&1; then
+            # Move all .yml and .yaml files from _github/workflows to .github/workflows
+            mv _github/workflows/*.yml .github/workflows/ 2>/dev/null || true
+            mv _github/workflows/*.yaml .github/workflows/ 2>/dev/null || true
+            echo "Workflow files moved successfully"
+          else
+            echo "No workflow files to move"
+          fi
+          
+      - name: Create .gitkeep file in _github/workflows
+        run: |
+          # Remove any remaining files except .gitkeep
+          find _github/workflows -type f ! -name '.gitkeep' -delete
+          # Create .gitkeep if it doesn't exist
+          touch _github/workflows/.gitkeep
+          
+      - name: Configure Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+      - name: Commit changes
+        run: |
+          git add .
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Move workflow definitions from _github/workflows to .github/workflows
+
+            - Moved all .yml and .yaml files from _github/workflows/ to .github/workflows/
+            - Left only .gitkeep in _github/workflows/ directory
+            - This ensures proper GitHub Actions workflow execution"
+            git push
+          fi
