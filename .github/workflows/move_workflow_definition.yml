@@ -1,59 +1,84 @@
 name: Move Workflow Definitions
 
 on:
-  pull_request:
-    paths:
-      - '_github/workflows/*.yml'
-      - '_github/workflows/*.yaml'
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Target branch to checkout'
+        required: true
+        default: 'main'
+        type: string
 
 jobs:
   move-workflows:
     runs-on: ubuntu-latest
     
     steps:
-      - name: Checkout source branch
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.event.inputs.branch }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          
-      - name: Create .github/workflows directory if it doesn't exist
-        run: mkdir -p .github/workflows
-        
-      - name: Move workflow files
+      
+      - name: Check if source directory exists
+        id: check-source
         run: |
-          # Check if there are any .yml or .yaml files to move
-          if ls _github/workflows/*.yml _github/workflows/*.yaml 1> /dev/null 2>&1; then
-            # Move all .yml and .yaml files from _github/workflows to .github/workflows
-            mv _github/workflows/*.yml .github/workflows/ 2>/dev/null || true
-            mv _github/workflows/*.yaml .github/workflows/ 2>/dev/null || true
-            echo "Workflow files moved successfully"
+          if [ -d "_github/workflows" ]; then
+            echo "source_exists=true" >> $GITHUB_OUTPUT
           else
-            echo "No workflow files to move"
+            echo "source_exists=false" >> $GITHUB_OUTPUT
           fi
-          
-      - name: Create .gitkeep file in _github/workflows
+      
+      - name: Create target directory if not exists
+        if: steps.check-source.outputs.source_exists == 'true'
         run: |
-          # Remove any remaining files except .gitkeep
-          find _github/workflows -type f ! -name '.gitkeep' -delete
+          mkdir -p .github/workflows
+      
+      - name: Move workflow files
+        if: steps.check-source.outputs.source_exists == 'true'
+        run: |
+          # Move all .yml files from _github/workflows/ to .github/workflows/
+          if ls _github/workflows/*.yml 1> /dev/null 2>&1; then
+            mv _github/workflows/*.yml .github/workflows/
+            echo "Moved workflow files successfully"
+          else
+            echo "No .yml files found in _github/workflows/"
+          fi
+      
+      - name: Clean up source directory
+        if: steps.check-source.outputs.source_exists == 'true'
+        run: |
+          # Remove all files except .gitkeep from _github/workflows/
+          find _github/workflows/ -type f ! -name '.gitkeep' -delete
+          
           # Create .gitkeep if it doesn't exist
           touch _github/workflows/.gitkeep
           
-      - name: Configure Git
+          echo "Cleaned up _github/workflows/ directory"
+      
+      - name: Commit and push changes
+        if: steps.check-source.outputs.source_exists == 'true'
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-      - name: Commit changes
-        run: |
           git add .
-          if git diff --staged --quiet; then
+          
+          if git diff --cached --quiet; then
             echo "No changes to commit"
           else
-            git commit -m "Move workflow definitions from _github/workflows to .github/workflows
-
-            - Moved all .yml and .yaml files from _github/workflows/ to .github/workflows/
-            - Left only .gitkeep in _github/workflows/ directory
-            - This ensures proper GitHub Actions workflow execution"
+            git commit -m "Move workflow definitions from _github/workflows to .github/workflows"
             git push
+            echo "Changes committed and pushed successfully"
+          fi
+      
+      - name: Summary
+        run: |
+          if [ "${{ steps.check-source.outputs.source_exists }}" == "true" ]; then
+            echo "✅ Workflow files moved successfully"
+            echo "📁 Source: _github/workflows/"
+            echo "📁 Target: .github/workflows/"
+            echo "🧹 _github/workflows/ now contains only .gitkeep"
+          else
+            echo "ℹ️ No _github/workflows/ directory found - nothing to move"
           fi
