@@ -50,6 +50,6 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           timeout_minutes: "60"
-          allowed_tools: "Bash(python -V),Bash(pip install -r requirements.txt),Bash(python -m src.main)"
+          allowed_tools: "Bash(pytest),Bash(python -V),Bash(pip install -r requirements.txt),Bash(python -m src.main)"
         env:
           BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY}}
