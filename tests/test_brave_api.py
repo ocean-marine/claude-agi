@@ -1,0 +1,157 @@
+#!/usr/bin/env python3
+"""Brave Search APIの基本テスト
+
+本モジュールは、Brave Search APIの基本機能をテストするためのツールです。
+環境変数設定の確認や基本的なAPI呼び出しの動作確認を行います。
+"""
+from __future__ import annotations
+
+import os
+import json
+import requests
+import pytest
+
+
+class TestBraveAPI:
+    """Brave Search APIのテストクラス"""
+
+    def test_api_key_exists(self):
+        """APIキーが環境変数に設定されていることを確認"""
+        api_key = os.getenv("BRAVE_API_KEY")
+        assert api_key is not None, "BRAVE_API_KEY環境変数が設定されていません"
+        assert len(api_key) > 0, "BRAVE_API_KEY環境変数が空です"
+
+    @pytest.mark.skipif(not os.getenv("BRAVE_API_KEY"), reason="BRAVE_API_KEY not set")
+    def test_basic_search_request(self):
+        """基本的な検索リクエストのテスト"""
+        api_key = os.getenv("BRAVE_API_KEY")
+        url = "https://api.search.brave.com/res/v1/web/search"
+        headers = {
+            "Accept": "application/json",
+            "Accept-Encoding": "gzip",
+            "X-Subscription-Token": api_key
+        }
+
+        params = {
+            "q": "rice news Japan",
+            "count": 5
+        }
+
+        response = requests.get(url, headers=headers, params=params, timeout=30)
+        assert response.status_code == 200, f"API request failed: {response.status_code}"
+
+        data = response.json()
+        assert "web" in data, "Response missing 'web' field"
+        assert "results" in data["web"], "Response missing 'results' field"
+
+    @pytest.mark.skipif(not os.getenv("BRAVE_API_KEY"), reason="BRAVE_API_KEY not set")
+    def test_japanese_search_request(self):
+        """日本語検索リクエストのテスト"""
+        api_key = os.getenv("BRAVE_API_KEY")
+        url = "https://api.search.brave.com/res/v1/web/search"
+        headers = {
+            "Accept": "application/json",
+            "Accept-Encoding": "gzip",
+            "X-Subscription-Token": api_key
+        }
+
+        params = {
+            "q": "米",
+            "count": 5,
+            "search_lang": "ja",
+            "country": "JP"
+        }
+
+        response = requests.get(url, headers=headers, params=params, timeout=30)
+        assert response.status_code == 200, f"Japanese API request failed: {response.status_code}"
+
+        data = response.json()
+        assert "web" in data, "Japanese response missing 'web' field"
+
+
+def manual_api_test():
+    """手動でのAPI接続テスト
+    
+    pytest実行時には実行されず、直接このファイルを実行した場合のみ動作します。
+    詳細なログ出力で API の動作を確認できます。
+    """
+    api_key = os.getenv("BRAVE_API_KEY")
+    
+    if not api_key:
+        print("❌ BRAVE_API_KEY環境変数が設定されていません")
+        return
+    
+    print(f"✅ APIキーが設定されています (長さ: {len(api_key)} 文字)")
+    
+    # シンプルなテスト検索
+    url = "https://api.search.brave.com/res/v1/web/search"
+    headers = {
+        "Accept": "application/json",
+        "Accept-Encoding": "gzip",
+        "X-Subscription-Token": api_key
+    }
+    
+    # 英語での簡単なテスト
+    params = {
+        "q": "rice news Japan",
+        "count": 5
+    }
+    
+    print("🔍 英語での基本テストを実行中...")
+    try:
+        response = requests.get(url, headers=headers, params=params, timeout=30)
+        print(f"ステータスコード: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "web" in data and "results" in data["web"]:
+                results = data["web"]["results"]
+                print(f"✅ 成功! {len(results)} 件の結果を取得")
+                
+                for i, result in enumerate(results[:3], 1):
+                    print(f"  {i}. {result.get('title', 'No title')}")
+                    print(f"     {result.get('url', 'No URL')}")
+            else:
+                print("❌ 検索結果の構造が予期されたものと異なります")
+                print(json.dumps(data, indent=2))
+        else:
+            print(f"❌ エラー: {response.status_code}")
+            print(f"レスポンス: {response.text}")
+    
+    except requests.exceptions.RequestException as e:
+        print(f"❌ リクエストエラー: {e}")
+    
+    # 日本語での検索テスト
+    print("\n🔍 日本語での検索テストを実行中...")
+    params_jp = {
+        "q": "米",
+        "count": 5,
+        "search_lang": "ja",
+        "country": "JP"
+    }
+    
+    try:
+        response = requests.get(url, headers=headers, params=params_jp, timeout=30)
+        print(f"ステータスコード: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "web" in data and "results" in data["web"]:
+                results = data["web"]["results"]
+                print(f"✅ 成功! {len(results)} 件の結果を取得")
+                
+                for i, result in enumerate(results[:3], 1):
+                    print(f"  {i}. {result.get('title', 'No title')}")
+                    print(f"     {result.get('url', 'No URL')}")
+            else:
+                print("❌ 検索結果の構造が予期されたものと異なります")
+        else:
+            print(f"❌ エラー: {response.status_code}")
+            print(f"レスポンス: {response.text}")
+    
+    except requests.exceptions.RequestException as e:
+        print(f"❌ リクエストエラー: {e}")
+
+
+if __name__ == "__main__":
+    manual_api_test()
