@@ -8,3 +8,8 @@ assignees: ''
 ---
 
 @claude
+
+
+
+---
+Don't hold back. Give it your all.
