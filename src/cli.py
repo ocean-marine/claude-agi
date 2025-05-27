@@ -13,17 +13,22 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import sys
 from pathlib import Path
 from typing import List, Optional
+
+# ログの設定
+logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
+logger = logging.getLogger(__name__)
 
 # ローカルモジュールのインポート
 try:
     from brave_search import BraveSearchClient, SearchConfig, InteractiveBraveSearch
     from text_analyzer import TextAnalyzer, AnalysisConfig, CountType, OutputFormat, InteractiveTextAnalyzer
 except ImportError as e:
-    print(f"モジュールのインポートエラー: {e}")
-    print("必要な依存関係がインストールされていることを確認してください。")
+    logger.error(f"モジュールのインポートエラー: {e}")
+    logger.error("必要な依存関係がインストールされていることを確認してください。")
     sys.exit(1)
 
 
@@ -222,10 +227,10 @@ class AGIToolCLI:
                 self.parser.print_help()
         
         except KeyboardInterrupt:
-            print("\n操作を中断しました。", file=sys.stderr)
+            logger.info("操作を中断しました。")
             sys.exit(1)
         except Exception as e:
-            print(f"エラーが発生しました: {e}", file=sys.stderr)
+            logger.error(f"エラーが発生しました: {e}")
             sys.exit(1)
     
     def _list_tools(self):
@@ -287,7 +292,7 @@ class AGIToolCLI:
             country=args.country
         )
         
-        print(f"'{config.query}' を検索中...", file=sys.stderr)
+        logger.info(f"'{config.query}' を検索中...")
         results = client.search(config)
         
         if results:
@@ -295,11 +300,11 @@ class AGIToolCLI:
             
             if config.output_file:
                 config.output_file.write_text(formatted_results, encoding='utf-8')
-                print(f"結果を {config.output_file} に保存しました。", file=sys.stderr)
+                logger.info(f"結果を {config.output_file} に保存しました。")
             else:
                 print(formatted_results)
         else:
-            print("検索に失敗しました。", file=sys.stderr)
+            logger.error("検索に失敗しました。")
             sys.exit(1)
     
     def _run_analyze(self, args):
@@ -320,7 +325,7 @@ class AGIToolCLI:
         
         if config.output_file:
             config.output_file.write_text(formatted_results, encoding='utf-8')
-            print(f"結果を {config.output_file} に保存しました。", file=sys.stderr)
+            logger.info(f"結果を {config.output_file} に保存しました。")
         else:
             print(formatted_results)
 

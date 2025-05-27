@@ -13,17 +13,20 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
+logger = logging.getLogger(__name__)
+
 try:
     from brave import Brave
 except ImportError:
-    print("Error: brave-search パッケージがインストールされていません。")
-    print("pip install brave-search を実行してください。")
+    logger.error("Error: brave-search パッケージがインストールされていません。")
+    logger.error("pip install brave-search を実行してください。")
     sys.exit(1)
 
 
@@ -97,7 +100,7 @@ class BraveSearchClient:
             )
             return results
         except Exception as e:
-            print(f"検索中にエラーが発生しました: {e}", file=sys.stderr)
+            logger.error(f"検索中にエラーが発生しました: {e}")
             return None
     
     def format_results(self, results: Any, format_type: str = "text") -> str:
@@ -152,15 +155,20 @@ class BraveSearchClient:
     
     def _format_csv(self, web_results: list[Any]) -> str:
         """CSVフォーマットで整形"""
-        lines = ["Title,URL,Description"]
+        import csv
+        from io import StringIO
+        
+        output = StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["Title", "URL", "Description"])
         
         for result in web_results:
-            title = result.title.replace('"', '""')
-            url = result.url.replace('"', '""')
-            description = getattr(result, 'description', '').replace('"', '""')
-            lines.append(f'"{title}","{url}","{description}"')
+            title = result.title
+            url = result.url
+            description = getattr(result, 'description', '')
+            writer.writerow([title, url, description])
         
-        return "\n".join(lines)
+        return output.getvalue()
 
 
 class InteractiveBraveSearch:
@@ -323,7 +331,7 @@ def main():
                 country=args.country
             )
             
-            print(f"'{config.query}' を検索中...", file=sys.stderr)
+            logger.info(f"'{config.query}' を検索中...")
             results = client.search(config)
             
             if results:
@@ -332,21 +340,21 @@ def main():
                 if config.output_file:
                     # ファイルに出力
                     config.output_file.write_text(formatted_results, encoding='utf-8')
-                    print(f"結果を {config.output_file} に保存しました。", file=sys.stderr)
+                    logger.info(f"結果を {config.output_file} に保存しました。")
                 else:
                     # 標準出力
                     print(formatted_results)
             else:
-                print("検索に失敗しました。", file=sys.stderr)
+                logger.error("検索に失敗しました。")
                 sys.exit(1)
     
     except ValueError as e:
         parser.error(str(e))
     except KeyboardInterrupt:
-        print("\n検索を中断しました。", file=sys.stderr)
+        logger.info("検索を中断しました。")
         sys.exit(1)
     except Exception as e:
-        print(f"予期しないエラーが発生しました: {e}", file=sys.stderr)
+        logger.error(f"予期しないエラーが発生しました: {e}")
         sys.exit(1)
 
 

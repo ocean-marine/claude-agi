@@ -13,12 +13,15 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import re
 import sys
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Dict, Optional, Union
+
+logger = logging.getLogger(__name__)
 
 
 class CountType(Enum):
@@ -201,14 +204,17 @@ class TextAnalyzer:
     
     def _format_csv(self, results: Dict[str, int]) -> str:
         """CSVフォーマットで整形"""
-        lines = ["Category,Count"]
+        import csv
+        from io import StringIO
+        
+        output = StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["Category", "Count"])
         
         for key, value in results.items():
-            # CSVのため、カンマを含む可能性のあるキーをエスケープ
-            escaped_key = key.replace('"', '""')
-            lines.append(f'"{escaped_key}",{value}')
+            writer.writerow([key, value])
         
-        return "\n".join(lines)
+        return output.getvalue()
     
     def analyze_with_config(self, config: AnalysisConfig) -> Dict[str, int]:
         """設定に基づいてテキストを分析
@@ -446,7 +452,7 @@ def main():
             if config.output_file:
                 # ファイルに出力
                 config.output_file.write_text(formatted_results, encoding='utf-8')
-                print(f"結果を {config.output_file} に保存しました。", file=sys.stderr)
+                logger.info(f"結果を {config.output_file} に保存しました。")
             else:
                 # 標準出力
                 print(formatted_results)
@@ -454,10 +460,10 @@ def main():
     except (ValueError, TypeError, FileNotFoundError, IOError) as e:
         parser.error(str(e))
     except KeyboardInterrupt:
-        print("\n分析を中断しました。", file=sys.stderr)
+        logger.info("分析を中断しました。")
         sys.exit(1)
     except Exception as e:
-        print(f"予期しないエラーが発生しました: {e}", file=sys.stderr)
+        logger.error(f"予期しないエラーが発生しました: {e}")
         sys.exit(1)
 
 
