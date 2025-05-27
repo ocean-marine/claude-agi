@@ -52,7 +52,6 @@ jobs:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           timeout_minutes: "60"
           allowed_tools: |
-            WebSearch
-            WebFetch
+            Bash(python -V)
         env:
           BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}
