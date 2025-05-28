@@ -54,6 +54,7 @@ jobs:
           allowed_tools: |
             Bash(cat:*),
             Bash(cd:*),
+            Bash(chmod:*),
             Bash(curl:*),
             Bash(date:*),
             Bash(echo:*),
