@@ -1,12 +1,12 @@
 ## Example
 
 ```shellscript
-curl -v -s --compressed \
+sh -c 'curl -v -s --compressed \
   --get \
-  --data-urlencode "q=石破内閣 支持率&count=5&freshness=pd"\
+  --data-urlencode "q=石破内閣 支持率&count=5&freshness=pd" \
   -H "Accept: application/json" \
   -H "X-Subscription-Token: ${BRAVE_API_KEY}" \
-  "https://api.search.brave.com/res/v1/web/search"
+  "https://api.search.brave.com/res/v1/web/search"'
 ```
 
 ## Query Parameters
