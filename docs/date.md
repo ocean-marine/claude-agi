@@ -1,56 +1,51 @@
-# dateコマンド使用方法ガイド
 
-## 基本構文
+⸻
 
-```bash
-date [オプション] [+フォーマット]
-```
+Guide to Using the date Command
 
-## 基本的な使用法
+Basic Syntax
 
-```bash
-# 現在の日時を表示
+date [OPTIONS] [+FORMAT]
+
+Common Usage
+
+# Display the current date and time
 date
 
-# UTC時刻で表示
+# Show time in UTC
 date -u
 
-# カスタムフォーマットで表示
-date +%Y-%m-%d
-```
-
-## 主要オプション
-
-- `-d STRING` : 指定した文字列の日付を表示
-- `-r FILE` : ファイルの最終更新日時を表示
-- `-u` : UTC時刻で表示
-
-## よく使うフォーマット指定子
-
-- `%Y` : 4桁の年（2025）
-- `%m` : 月（01-12）
-- `%d` : 日（01-31）
-- `%H` : 時（00-23）
-- `%M` : 分（00-59）
-- `%S` : 秒（00-59）
-- `%F` : ISO形式の日付（%Y-%m-%d）
-- `%T` : 時刻（%H:%M:%S）
-
-## 基本的な使用例
-
-```bash
-# YYYY-MM-DD形式
+# Display with a custom format
 date +%Y-%m-%d
 
-# 日時をまとめて表示
+Major Options
+	•	-d STRING : Display the date described by STRING.
+	•	-r FILE   : Show the last modification time of FILE.
+	•	-u        : Display UTC time.
+
+Frequently Used Format Specifiers
+	•	%Y : 4-digit year (e.g., 2025)
+	•	%m : Month (01–12)
+	•	%d : Day of month (01–31)
+	•	%H : Hour (00–23)
+	•	%M : Minute (00–59)
+	•	%S : Second (00–59)
+	•	%F : ISO 8601 date (%Y-%m-%d)
+	•	%T : Time (%H:%M:%S)
+
+Practical Examples
+
+# YYYY-MM-DD format
+date +%Y-%m-%d
+
+# Date and time together
 date '+%Y-%m-%d %H:%M:%S'
 
-# 明日の日付
+# Tomorrow’s date
 date -d "tomorrow" +%Y-%m-%d
 
-# 1週間前
+# One week ago
 date -d "1 week ago" +%Y-%m-%d
 
-# ファイルの更新日時
+# Show a file’s last modification time
 date -r /etc/passwd
-```
