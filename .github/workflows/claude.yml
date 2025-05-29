@@ -1,3 +1,4 @@
+
 name: Claude PR Assistant
 
 on:
@@ -35,22 +36,27 @@ jobs:
       )
     runs-on: ubuntu-latest
     permissions:
-      contents: write          # ← Bash がファイルを触れるように
-      pull-requests: write     # ← コメント更新で使用
-      issues: write
+      contents: read
+      pull-requests: read
+      issues: read
       id-token: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
           fetch-depth: 1
 
       - name: Run Claude PR Action
-        uses: anthropics/claude-code-action@v0.0.9
+        uses: anthropics/claude-code-action@beta
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           timeout_minutes: "60"
           allowed_tools: |
-            Bash(cd:*),Bash(chmod:*),Bash(sh:*)
+            Bash(chmod:*),
+            Bash(curl:*),
+            Bash(pip:*),
+            Bash(python:*),
+            Bash(sh:*)
         env:
           BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}
