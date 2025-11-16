@@ -65,8 +65,8 @@
 </script>
 
 <div class="flex flex-col h-full">
-  <div class="bg-gray-800 border-b border-gray-700 px-4 py-3">
-    <h1 class="text-white text-lg font-semibold">Chat Assistant</h1>
+  <div class="bg-gray-800 border-b border-gray-700 px-3 sm:px-4 py-2 sm:py-3">
+    <h1 class="text-white text-base sm:text-lg font-semibold">Chat Assistant</h1>
   </div>
 
   <MessageList {messages} />

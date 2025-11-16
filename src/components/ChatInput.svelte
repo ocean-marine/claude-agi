@@ -21,21 +21,22 @@
   }
 </script>
 
-<div class="border-t border-gray-700 bg-gray-800 px-4 py-4">
-  <div class="max-w-4xl mx-auto flex gap-3">
+<div class="border-t border-gray-700 bg-gray-800 px-2 sm:px-4 py-3 sm:py-4">
+  <div class="max-w-2xl sm:max-w-3xl lg:max-w-4xl mx-auto flex gap-2 sm:gap-3">
     <textarea
       bind:value={input}
       on:keydown={handleKeydown}
       placeholder="メッセージを入力..."
-      class="flex-1 bg-gray-700 text-white rounded-lg px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
+      class="flex-1 bg-gray-700 text-white rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
       rows="1"
     />
     <button
       on:click={handleSend}
       disabled={!input.trim() || isLoading}
-      class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg px-6 py-3 font-medium transition-colors flex items-center gap-2"
+      class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg px-3 sm:px-6 py-2 sm:py-3 font-medium transition-colors flex items-center gap-2 whitespace-nowrap flex-shrink-0"
     >
-      <span>送信</span>
+      <span class="hidden sm:inline">送信</span>
+      <span class="sm:hidden">送</span>
       {#if isLoading}
         <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
