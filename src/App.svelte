@@ -2,7 +2,7 @@
   import ChatContainer from './components/ChatContainer.svelte'
 </script>
 
-<div class="w-screen h-screen bg-gray-900 overflow-hidden">
+<div class="w-full h-screen bg-gray-900 overflow-hidden flex flex-col">
   <ChatContainer />
 </div>
 

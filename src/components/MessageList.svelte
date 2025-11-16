@@ -14,7 +14,7 @@
 </script>
 
 <div class="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800" bind:this={scrollContainer}>
-  <div class="max-w-2xl sm:max-w-3xl lg:max-w-4xl mx-auto px-2 sm:px-4">
+  <div class="w-full px-2 sm:px-4">
     {#each messages as message (message.id)}
       <Message {message} />
     {/each}

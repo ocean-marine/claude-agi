@@ -21,19 +21,19 @@
   }
 </script>
 
-<div class="border-t border-gray-700 bg-gray-800 px-2 sm:px-4 py-3 sm:py-4">
-  <div class="max-w-2xl sm:max-w-3xl lg:max-w-4xl mx-auto flex gap-2 sm:gap-3">
+<div class="border-t border-gray-700 bg-gray-800 px-2 sm:px-4 py-2 sm:py-3">
+  <div class="flex gap-2 sm:gap-3 w-full">
     <textarea
       bind:value={input}
       on:keydown={handleKeydown}
       placeholder="メッセージを入力..."
-      class="flex-1 bg-gray-700 text-white rounded-lg px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-500"
+      class="flex-1 bg-gray-700 text-white rounded-lg px-2 sm:px-3 py-2 text-xs sm:text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
       rows="1"
     />
     <button
       on:click={handleSend}
       disabled={!input.trim() || isLoading}
-      class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg px-3 sm:px-6 py-2 sm:py-3 font-medium transition-colors flex items-center gap-2 whitespace-nowrap flex-shrink-0"
+      class="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg px-2 sm:px-4 py-2 font-medium transition-colors flex items-center justify-center gap-1 whitespace-nowrap flex-shrink-0 min-w-fit"
     >
       <span class="hidden sm:inline">送信</span>
       <span class="sm:hidden">送</span>
