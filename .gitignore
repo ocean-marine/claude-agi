@@ -195,3 +195,17 @@ uv.lock
 
 # Environment variables
 .env
+
+# Node.js / npm
+node_modules/
+npm-debug.log
+yarn.lock
+package-lock.json
+
+# Vite
+dist/
+.vite/
+
+# IDE
+.idea/
+.vscode/
