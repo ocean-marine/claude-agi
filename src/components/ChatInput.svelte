@@ -167,7 +167,7 @@
       class="flex gap-2 sm:gap-3 w-full items-center bg-gray-800 rounded-full px-2 sm:px-3 py-1.5 sm:py-2"
     >
       <label
-        class="flex items-center justify-center text-gray-200 cursor-pointer transition-colors flex-shrink-0 hover:text-white {isUploadingFile
+        class="flex items-center justify-center ml-1 sm:ml-2 text-gray-200 cursor-pointer transition-colors flex-shrink-0 hover:text-white transform -translate-y-0.5 {isUploadingFile
           ? 'pointer-events-none'
           : ''}"
         title="Vector Store にファイルをアップロード"
@@ -181,28 +181,23 @@
           accept={acceptExtensions}
           disabled={isUploadingFile}
         />
-        <svg
-          class="w-4 h-4 sm:w-5 sm:h-5 {isUploadingFile ? 'animate-spin' : ''}"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          {#if isUploadingFile}
+        {#if isUploadingFile}
+          <svg
+            class="w-4 h-4 sm:w-5 sm:h-5 animate-spin"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
               d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
             />
-          {:else}
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-            />
-          {/if}
-        </svg>
+          </svg>
+        {:else}
+          <span class="text-xl leading-none">+</span>
+        {/if}
       </label>
 
       <textarea

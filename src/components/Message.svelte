@@ -5,13 +5,7 @@
   export let isLoading = false
 
   $: isUser = message.sender === 'user'
-  $: bgClass = isUser ? 'bg-blue-600' : 'bg-gray-700'
-  $: textClass = isUser ? 'text-white' : 'text-gray-100'
   $: rowClass = isUser ? 'flex-row-reverse' : 'flex-row'
-  $: timestampText =
-    message && message.timestamp
-      ? new Date(message.timestamp).toLocaleTimeString()
-      : ''
   $: renderedText = renderMarkdown(message?.text || '')
   $: bubbleClass = isUser
     ? 'inline-block max-w-full bg-gray-800 text-gray-50 border border-gray-700 rounded-3xl px-4 py-3 shadow-sm'

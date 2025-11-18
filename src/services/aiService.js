@@ -671,11 +671,18 @@ export async function callOpenAIFileSearch(
   }
 
   try {
+    const currentTime = new Date().toLocaleString('ja-JP', {
+      timeZone: 'Asia/Tokyo',
+      hour12: false
+    })
+
     const payload = {
       // File Search は Responses API 用のモデル gpt-5.1 を利用
       model: 'gpt-5.1',
       input: message,
       instructions: `あなたは高精度なRAG（Retrieval-Augmented Generation）リサーチアシスタントです。
+
+現在の日時（日本時間）: ${currentTime}
 
 ## 基本原則
 1. **検索結果に基づく回答**
@@ -765,7 +772,7 @@ export async function callOpenAIFileSearch(
           fileName: result.file_name || result.filename || 'Unknown File',
           content: result.content || result.text || '',
           score: result.score || 0,
-          chunkId: result.chunk_id || null
+          chunkId: result.chunk_id || result.chunkId || null
         }))
       }
 
