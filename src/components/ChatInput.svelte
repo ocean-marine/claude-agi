@@ -37,9 +37,19 @@
   export let knowledgeBaseId = ''
 
   let isUploadingFile = false
-  let fileUploadMessage = ''
   let fileInputElement
   let isComposing = false
+  let fileNoticeId = 0
+
+  function notifyFileUploadStatus(message, variant = 'info') {
+    fileNoticeId += 1
+    dispatch('fileUploadNotice', {
+      id: fileNoticeId,
+      message,
+      variant,
+      timestamp: Date.now()
+    })
+  }
 
   function handleSend() {
     if (!apiKey || !apiKey.trim()) {
@@ -66,7 +76,6 @@
   }
 
   async function handleFileChange(event) {
-    fileUploadMessage = ''
     const files = Array.from(event.currentTarget.files || [])
 
     if (files.length === 0) {
@@ -75,9 +84,12 @@
 
     const invalidFiles = files.filter((file) => !isAllowedExtension(file.name))
     if (invalidFiles.length > 0) {
-      fileUploadMessage = `このファイル形式はアップロードできません: ${invalidFiles
-        .map((file) => file.name)
-        .join(', ')}。対応形式: ${allowedExtensionsText}`
+      notifyFileUploadStatus(
+        `このファイル形式はアップロードできません: ${invalidFiles
+          .map((file) => file.name)
+          .join(', ')}。対応形式: ${allowedExtensionsText}`,
+        'error'
+      )
       if (fileInputElement) {
         fileInputElement.value = ''
       }
@@ -85,7 +97,7 @@
     }
 
     if (!apiKey || !apiKey.trim()) {
-      fileUploadMessage = 'ファイルをアップロードする前に API キーを設定してください。'
+      notifyFileUploadStatus('ファイルをアップロードする前に API キーを設定してください。', 'error')
       dispatch('openSettings')
       if (fileInputElement) {
         fileInputElement.value = ''
@@ -118,24 +130,32 @@
       const failed = uploadResults.filter((item) => !item.success)
       const total = uploadResults.length
 
+      let variant = 'info'
+      let statusMessage = ''
+
       if (success.length === total) {
-        fileUploadMessage = `${total}件のファイルをknowledge_baseに追加しました。`
+        statusMessage = `${total}件のファイルをknowledge_baseに追加しました。`
+        variant = 'success'
       } else if (failed.length === total) {
-        fileUploadMessage = `${total}件すべてのアップロードに失敗しました。`
+        statusMessage = `${total}件すべてのアップロードに失敗しました。`
+        variant = 'error'
       } else {
-        fileUploadMessage = `${total}件中 ${success.length}件をknowledge_baseに追加、${failed.length}件でエラーが発生しました。`
+        statusMessage = `${total}件中 ${success.length}件をknowledge_baseに追加、${failed.length}件でエラーが発生しました。`
+        variant = 'warning'
       }
 
       if (failed.length > 0) {
         const failureSummary = failed
           .map((item) => `${item.file.name}${item.error ? `: ${item.error}` : ''}`)
           .join(', ')
-        fileUploadMessage += ` 失敗したファイル: ${failureSummary}`
+        statusMessage += ` 失敗したファイル: ${failureSummary}`
       }
+
+      notifyFileUploadStatus(statusMessage, variant)
 
       dispatch('filesUploaded')
     } catch (error) {
-      fileUploadMessage = error.message || 'ファイルのアップロードに失敗しました。'
+      notifyFileUploadStatus(error.message || 'ファイルのアップロードに失敗しました。', 'error')
     } finally {
       isUploadingFile = false
       if (fileInputElement) {
@@ -232,16 +252,6 @@
         <span class="sm:hidden">送</span>
       </button>
     </div>
-
-    {#if fileUploadMessage}
-      <p class="text-[10px] sm:text-xs text-gray-400 px-1">
-        {#if isUploadingFile}
-          ⏳ {fileUploadMessage}
-        {:else}
-          {fileUploadMessage}
-        {/if}
-      </p>
-    {/if}
 
     <p class="text-[10px] sm:text-xs text-gray-500 px-1 text-center mt-1">
       AI の回答は必ずしも正しいとは限りません。重要な情報は確認するようにしてください。
