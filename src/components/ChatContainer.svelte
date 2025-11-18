@@ -104,21 +104,19 @@
   }
 </script>
 
-  <div class="flex flex-col w-full relative min-h-[calc(100vh-3rem)]">
+<div class="flex flex-col w-full relative min-h-[calc(100vh-3rem)]">
   <div class="flex-1 pb-24">
     <MessageList {messages} {isLoading} fileNotices={fileUploadNotices} />
   </div>
 
-  <div class="sticky bottom-0 left-0 right-0 bg-gray-900">
-    <ChatInput
-      on:sendMessage={handleSendMessage}
-      on:knowledgeBaseCreated={handleKnowledgeBaseCreated}
-      on:filesUploaded={handleFilesUploaded}
-      on:openSettings={handleOpenSettings}
-      on:fileUploadNotice={handleFileUploadNotice}
-      loading={isLoading}
-      {apiKey}
-      {knowledgeBaseId}
-    />
-  </div>
+  <ChatInput
+    on:sendMessage={handleSendMessage}
+    on:knowledgeBaseCreated={handleKnowledgeBaseCreated}
+    on:filesUploaded={handleFilesUploaded}
+    on:openSettings={handleOpenSettings}
+    on:fileUploadNotice={handleFileUploadNotice}
+    loading={isLoading}
+    {apiKey}
+    {knowledgeBaseId}
+  />
 </div>

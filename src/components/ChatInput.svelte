@@ -161,7 +161,7 @@
   }
 </script>
 
-<div class="bg-gray-900 px-2 sm:px-4 py-2 sm:py-3">
+<div class="fixed bottom-0 left-0 right-0 z-30 bg-gray-900 px-2 sm:px-4 py-2 sm:py-3">
   <div class="flex flex-col gap-1 w-full max-w-4xl mx-auto">
     <div
       class="flex gap-2 sm:gap-3 w-full items-center bg-gray-800 rounded-full px-2 sm:px-3 py-1.5 sm:py-2"
