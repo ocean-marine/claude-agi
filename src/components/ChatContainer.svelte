@@ -11,7 +11,7 @@
   let messages = []
   let isLoading = false
   let knowledgeBaseId = ''
-  let lastResponseId = null // Track the last response ID for conversation continuity (null for first message)
+  let lastResponseId = null // Track the last response ID for conversation continuity
   let fileUploadNotices = []
 
   // Initialize knowledge_base when apiKey changes
@@ -34,18 +34,8 @@
   }
 
   async function handleSendMessage(event) {
-    const userMessage = {
-      id: Date.now(),
-      text: event.detail,
-      sender: 'user',
-      timestamp: new Date()
-    }
-
-    messages = [...messages, userMessage]
-    isLoading = true
-
-    // Create a placeholder for assistant message
-    const assistantMessageId = Date.now() + 1
+    const userMessage = { id: Date.now(), text: event.detail, sender: 'user', timestamp: new Date() }
+    const assistantMessageId = userMessage.id + 1
     const assistantMessage = {
       id: assistantMessageId,
       text: '',
@@ -55,7 +45,20 @@
       citations: []
     }
 
-    messages = [...messages, assistantMessage]
+    messages = [...messages, userMessage, assistantMessage]
+    isLoading = true
+
+    const updateAssistant = (updater) => {
+      messages = messages.map((msg) =>
+        msg.id === assistantMessageId ? (typeof updater === 'function' ? updater(msg) : { ...msg, ...updater }) : msg
+      )
+    }
+    const appendChunk = (chunk) => updateAssistant((msg) => ({ ...msg, text: msg.text + chunk }))
+    const setError = (error) => updateAssistant({ text: `❌ ${error}` })
+    const captureResponseId = (responseId) => {
+      lastResponseId = responseId
+      updateAssistant({ responseId })
+    }
 
     const useFileSearch = !!(knowledgeBaseId && knowledgeBaseId.trim().length > 0)
 
@@ -65,60 +68,13 @@
         userMessage.text,
         knowledgeBaseId,
         lastResponseId,
-        (chunk) => {
-          messages = messages.map(msg =>
-            msg.id === assistantMessageId
-              ? { ...msg, text: msg.text + chunk }
-              : msg
-          )
-        },
-        (error) => {
-          messages = messages.map(msg =>
-            msg.id === assistantMessageId
-              ? { ...msg, text: `❌ ${error}` }
-              : msg
-          )
-        },
-        (responseId) => {
-          lastResponseId = responseId
-          messages = messages.map(msg =>
-            msg.id === assistantMessageId ? { ...msg, responseId } : msg
-          )
-        },
-        (citations) => {
-          messages = messages.map(msg =>
-            msg.id === assistantMessageId ? { ...msg, citations } : msg
-          )
-        }
+        appendChunk,
+        setError,
+        captureResponseId,
+        (citations) => updateAssistant({ citations })
       )
     } else {
-      // Call OpenAI Responses API with streaming and conversation history
-      await callOpenAIResponses(
-        apiKey,
-        userMessage.text,
-        lastResponseId, // Pass the previous response ID for conversation continuity
-        (chunk) => {
-          messages = messages.map(msg =>
-            msg.id === assistantMessageId
-              ? { ...msg, text: msg.text + chunk }
-              : msg
-          )
-        },
-        (error) => {
-          messages = messages.map(msg =>
-            msg.id === assistantMessageId
-              ? { ...msg, text: `❌ ${error}` }
-              : msg
-          )
-        },
-        (responseId) => {
-          // Store the new response ID for the next message in conversation
-          lastResponseId = responseId
-          messages = messages.map(msg =>
-            msg.id === assistantMessageId ? { ...msg, responseId } : msg
-          )
-        }
-      )
+      await callOpenAIResponses(apiKey, userMessage.text, lastResponseId, appendChunk, setError, captureResponseId)
     }
 
     isLoading = false

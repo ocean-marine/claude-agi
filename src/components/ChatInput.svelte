@@ -4,31 +4,10 @@
 
   const dispatch = createEventDispatcher()
 
-  const allowedExtensions = [
-    'c',
-    'cpp',
-    'cs',
-    'css',
-    'doc',
-    'docx',
-    'go',
-    'html',
-    'java',
-    'js',
-    'json',
-    'md',
-    'pdf',
-    'php',
-    'pptx',
-    'py',
-    'rb',
-    'sh',
-    'tex',
-    'ts',
-    'txt'
-  ]
-  const allowedExtensionsText =
-    '.c, .cpp, .cs, .css, .doc, .docx, .go, .html, .java, .js, .json, .md, .pdf, .php, .pptx, .py, .rb, .sh, .tex, .ts, .txt'
+  const allowedExtensions = ['c', 'cpp', 'cs', 'css', 'doc', 'docx', 'go', 'html', 'java', 'js', 'json', 'md', 'pdf', 'php', 'pptx', 'py', 'rb', 'sh', 'tex', 'ts', 'txt']
+  const extensionList = allowedExtensions.map((ext) => `.${ext}`)
+  const allowedExtensionsText = extensionList.join(', ')
+  const acceptExtensions = extensionList.join(',')
 
   let input = ''
 
@@ -41,6 +20,8 @@
   let isComposing = false
   let fileNoticeId = 0
 
+  const hasApiKey = () => Boolean(apiKey && apiKey.trim())
+
   function notifyFileUploadStatus(message, variant = 'info') {
     fileNoticeId += 1
     dispatch('fileUploadNotice', {
@@ -51,8 +32,14 @@
     })
   }
 
+  function resetFileInput() {
+    if (fileInputElement) {
+      fileInputElement.value = ''
+    }
+  }
+
   function handleSend() {
-    if (!apiKey || !apiKey.trim()) {
+    if (!hasApiKey()) {
       dispatch('openSettings')
       return
     }
@@ -82,7 +69,7 @@
       return
     }
 
-    const invalidFiles = files.filter((file) => !isAllowedExtension(file.name))
+    const invalidFiles = files.filter((file) => !allowedExtensions.includes(getFileExtension(file.name)))
     if (invalidFiles.length > 0) {
       notifyFileUploadStatus(
         `このファイル形式はアップロードできません: ${invalidFiles
@@ -90,62 +77,60 @@
           .join(', ')}。対応形式: ${allowedExtensionsText}`,
         'error'
       )
-      if (fileInputElement) {
-        fileInputElement.value = ''
-      }
+      resetFileInput()
       return
     }
 
-    if (!apiKey || !apiKey.trim()) {
+    if (!hasApiKey()) {
       notifyFileUploadStatus('ファイルをアップロードする前に API キーを設定してください。', 'error')
       dispatch('openSettings')
-      if (fileInputElement) {
-        fileInputElement.value = ''
-      }
+      resetFileInput()
       return
     }
 
     try {
       isUploadingFile = true
 
-      // Get or create knowledge_base
-      let targetVectorStoreId = knowledgeBaseId
-      if (!targetVectorStoreId || !targetVectorStoreId.trim()) {
-        const knowledgeBase = await getOrCreateKnowledgeBase(apiKey)
-        targetVectorStoreId = knowledgeBase.id
-        dispatch('knowledgeBaseCreated', knowledgeBase.id)
+      const targetVectorStoreId =
+        knowledgeBaseId && knowledgeBaseId.trim()
+          ? knowledgeBaseId
+          : (await getOrCreateKnowledgeBase(apiKey)).id
+
+      if (!knowledgeBaseId || !knowledgeBaseId.trim()) {
+        dispatch('knowledgeBaseCreated', targetVectorStoreId)
       }
 
-      const uploadResults = []
-      for (const file of files) {
-        try {
-          await uploadFileToVectorStore(apiKey, targetVectorStoreId, file)
-          uploadResults.push({ file, success: true })
-        } catch (error) {
-          uploadResults.push({ file, success: false, error: error.message })
-        }
-      }
+      const uploadResults = await Promise.all(
+        files.map(async (file) => {
+          try {
+            await uploadFileToVectorStore(apiKey, targetVectorStoreId, file)
+            return { file }
+          } catch (error) {
+            return { file, error: error.message }
+          }
+        })
+      )
 
-      const success = uploadResults.filter((item) => item.success)
-      const failed = uploadResults.filter((item) => !item.success)
+      const failures = uploadResults.filter((item) => item.error)
+      const successCount = uploadResults.length - failures.length
       const total = uploadResults.length
 
       let variant = 'info'
       let statusMessage = ''
 
-      if (success.length === total) {
+      if (failures.length === 0) {
         statusMessage = `${total}件のファイルをknowledge_baseに追加しました。`
         variant = 'success'
-      } else if (failed.length === total) {
+      } else if (successCount === 0) {
         statusMessage = `${total}件すべてのアップロードに失敗しました。`
         variant = 'error'
       } else {
-        statusMessage = `${total}件中 ${success.length}件をknowledge_baseに追加、${failed.length}件でエラーが発生しました。`
+        statusMessage = `${total}件中 ${successCount}件をknowledge_baseに追加、${failures.length}件でエラーが発生しました。`
         variant = 'warning'
       }
 
-      if (failed.length > 0) {
-        const failureSummary = failed
+      if (failures.length > 0) {
+        const failureSummary = failures
           .map((item) => `${item.file.name}${item.error ? `: ${item.error}` : ''}`)
           .join(', ')
         statusMessage += ` 失敗したファイル: ${failureSummary}`
@@ -158,26 +143,13 @@
       notifyFileUploadStatus(error.message || 'ファイルのアップロードに失敗しました。', 'error')
     } finally {
       isUploadingFile = false
-      if (fileInputElement) {
-        fileInputElement.value = ''
-      }
+      resetFileInput()
     }
   }
 
-  function isAllowedExtension(name) {
-    const ext = getFileExtension(name)
-    return allowedExtensions.includes(ext)
-  }
-
-  function getFileExtension(name) {
-    if (!name || typeof name !== 'string') {
-      return ''
-    }
-    const parts = name.split('.')
-    if (parts.length < 2) {
-      return ''
-    }
-    return parts.pop().toLowerCase()
+  function getFileExtension(name = '') {
+    const index = typeof name === 'string' ? name.lastIndexOf('.') : -1
+    return index === -1 ? '' : name.slice(index + 1).toLowerCase()
   }
 
   function handleCompositionStart() {
@@ -206,7 +178,7 @@
           class="hidden"
           bind:this={fileInputElement}
           on:change={handleFileChange}
-          accept=".c,.cpp,.cs,.css,.doc,.docx,.go,.html,.java,.js,.json,.md,.pdf,.php,.pptx,.py,.rb,.sh,.tex,.ts,.txt"
+          accept={acceptExtensions}
           disabled={isUploadingFile}
         />
         <svg
