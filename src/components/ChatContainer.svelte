@@ -1,37 +1,36 @@
 <script>
   import MessageList from './MessageList.svelte'
   import ChatInput from './ChatInput.svelte'
-  import Settings from './Settings.svelte'
-  import { onMount } from 'svelte'
-  import { callOpenAIStreaming, formatMessagesForAPI } from '../services/aiService.js'
+  import { createEventDispatcher } from 'svelte'
+  import { callOpenAIResponses, callOpenAIFileSearch, getOrCreateKnowledgeBase } from '../services/aiService.js'
+
+  export let apiKey = ''
+
+  const dispatch = createEventDispatcher()
 
   let messages = []
   let isLoading = false
-  let apiKey = ''
+  let knowledgeBaseId = ''
+  let lastResponseId = null // Track the last response ID for conversation continuity (null for first message)
 
-  onMount(() => {
-    // Load messages from localStorage
-    const saved = localStorage.getItem('chat_messages')
-    if (saved) {
-      messages = JSON.parse(saved)
-    } else {
-      // Initial greeting message
-      messages = [
-        {
-          id: 1,
-          text: 'こんにちは！APIキーを設定して、AIによる返答を利用してください。',
-          sender: 'assistant',
-          timestamp: new Date()
-        }
-      ]
+  // Initialize knowledge_base when apiKey changes
+  $: if (apiKey && apiKey.trim() && !knowledgeBaseId) {
+    initializeKnowledgeBase()
+  }
+
+  async function initializeKnowledgeBase() {
+    if (!apiKey || !apiKey.trim()) {
+      return
     }
 
-    // Load API key from localStorage
-    const savedKey = localStorage.getItem('openai_api_key')
-    if (savedKey) {
-      apiKey = savedKey
+    try {
+      const knowledgeBase = await getOrCreateKnowledgeBase(apiKey)
+      knowledgeBaseId = knowledgeBase.id
+      console.log('Knowledge base initialized:', knowledgeBaseId)
+    } catch (error) {
+      console.error('Failed to initialize knowledge_base:', error)
     }
-  })
+  }
 
   async function handleSendMessage(event) {
     const userMessage = {
@@ -42,7 +41,6 @@
     }
 
     messages = [...messages, userMessage]
-    saveMessages()
     isLoading = true
 
     // Create a placeholder for assistant message
@@ -51,62 +49,107 @@
       id: assistantMessageId,
       text: '',
       sender: 'assistant',
-      timestamp: new Date()
+      timestamp: new Date(),
+      responseId: null,
+      citations: []
     }
 
     messages = [...messages, assistantMessage]
-    saveMessages()
 
-    // Call OpenAI API with streaming
-    const apiMessages = formatMessagesForAPI(messages.slice(0, -1))
+    const useFileSearch = !!(knowledgeBaseId && knowledgeBaseId.trim().length > 0)
 
-    await callOpenAIStreaming(
-      apiKey,
-      apiMessages,
-      (chunk) => {
-        // Update the assistant message with new chunk
-        messages = messages.map(msg =>
-          msg.id === assistantMessageId
-            ? { ...msg, text: msg.text + chunk }
-            : msg
-        )
-        saveMessages()
-      },
-      (error) => {
-        // Replace the assistant message with error message
-        messages = messages.map(msg =>
-          msg.id === assistantMessageId
-            ? { ...msg, text: `❌ ${error}` }
-            : msg
-        )
-        saveMessages()
-      }
-    )
+    if (useFileSearch) {
+      await callOpenAIFileSearch(
+        apiKey,
+        userMessage.text,
+        knowledgeBaseId,
+        lastResponseId,
+        (chunk) => {
+          messages = messages.map(msg =>
+            msg.id === assistantMessageId
+              ? { ...msg, text: msg.text + chunk }
+              : msg
+          )
+        },
+        (error) => {
+          messages = messages.map(msg =>
+            msg.id === assistantMessageId
+              ? { ...msg, text: `❌ ${error}` }
+              : msg
+          )
+        },
+        (responseId) => {
+          lastResponseId = responseId
+          messages = messages.map(msg =>
+            msg.id === assistantMessageId ? { ...msg, responseId } : msg
+          )
+        },
+        (citations) => {
+          messages = messages.map(msg =>
+            msg.id === assistantMessageId ? { ...msg, citations } : msg
+          )
+        }
+      )
+    } else {
+      // Call OpenAI Responses API with streaming and conversation history
+      await callOpenAIResponses(
+        apiKey,
+        userMessage.text,
+        lastResponseId, // Pass the previous response ID for conversation continuity
+        (chunk) => {
+          messages = messages.map(msg =>
+            msg.id === assistantMessageId
+              ? { ...msg, text: msg.text + chunk }
+              : msg
+          )
+        },
+        (error) => {
+          messages = messages.map(msg =>
+            msg.id === assistantMessageId
+              ? { ...msg, text: `❌ ${error}` }
+              : msg
+          )
+        },
+        (responseId) => {
+          // Store the new response ID for the next message in conversation
+          lastResponseId = responseId
+          messages = messages.map(msg =>
+            msg.id === assistantMessageId ? { ...msg, responseId } : msg
+          )
+        }
+      )
+    }
 
     isLoading = false
   }
 
-  function handleApiKeySet(event) {
-    apiKey = event.detail
+  function handleKnowledgeBaseCreated(event) {
+    knowledgeBaseId = event.detail
   }
 
-  function handleApiKeyRemoved() {
-    apiKey = ''
+  function handleFilesUploaded() {
+    dispatch('filesUploaded')
   }
 
-  function saveMessages() {
-    localStorage.setItem('chat_messages', JSON.stringify(messages))
+  function handleOpenSettings() {
+    dispatch('openSettings')
   }
 </script>
 
-<div class="flex flex-col h-full w-full relative">
-  <div class="bg-gray-800 border-b border-gray-700 px-2 sm:px-4 py-2">
-    <h1 class="text-white text-sm sm:text-base font-semibold">Chat Assistant</h1>
+  <div class="flex flex-col w-full relative min-h-[calc(100vh-3rem)]">
+  <div class="flex-1 pb-24">
+    <MessageList {messages} {isLoading} />
   </div>
 
-  <Settings on:apiKeySet={handleApiKeySet} on:apiKeyRemoved={handleApiKeyRemoved} />
-
-  <MessageList {messages} />
-
-  <ChatInput on:sendMessage={handleSendMessage} loading={isLoading} />
+  <div class="sticky bottom-0 left-0 right-0 bg-gray-900">
+    <ChatInput
+      on:sendMessage={handleSendMessage}
+      on:knowledgeBaseCreated={handleKnowledgeBaseCreated}
+      on:filesUploaded={handleFilesUploaded}
+      on:openSettings={handleOpenSettings}
+      loading={isLoading}
+      {apiKey}
+      {knowledgeBaseId}
+    />
+  </div>
 </div>

@@ -3,35 +3,25 @@
   import { afterUpdate } from 'svelte'
 
   export let messages = []
+  export let isLoading = false
 
-  let scrollContainer
+  let endElement
 
   afterUpdate(() => {
-    if (scrollContainer) {
-      scrollContainer.scrollTop = scrollContainer.scrollHeight
+    if (endElement) {
+      endElement.scrollIntoView({ behavior: 'auto', block: 'end' })
     }
   })
 </script>
 
-<div class="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800" bind:this={scrollContainer}>
+<div class="flex-1">
   <div class="w-full px-2 sm:px-4">
-    {#each messages as message (message.id)}
-      <Message {message} />
+    {#each messages as message, index (message.id)}
+      <Message
+        {message}
+        isLoading={isLoading && index === messages.length - 1 && message.sender === 'assistant'}
+      />
     {/each}
+    <div bind:this={endElement}></div>
   </div>
 </div>
-
-<style>
-  :global(.scrollbar-thin) {
-    scrollbar-width: thin;
-  }
-
-  :global(.scrollbar-thumb-gray-600::-webkit-scrollbar-thumb) {
-    background-color: rgb(75, 85, 99);
-    border-radius: 6px;
-  }
-
-  :global(.scrollbar-track-gray-800::-webkit-scrollbar-track) {
-    background-color: rgb(31, 41, 55);
-  }
-</style>

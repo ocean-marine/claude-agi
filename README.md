@@ -1,15 +1,17 @@
-# Claude AGI
+# RAG Studio
 
-## ChatGPT風チャットアプリ
+## AI-powered Document Search and Chat Application
 
-SvelteとTailwind CSSで作成されたシンプルなチャットアプリです。
+SvelteとTailwind CSSで作成されたRAG（Retrieval-Augmented Generation）機能を持つチャットアプリです。
 
 ### 機能
 
-- **リアルタイムチャット**: メッセージの送受信
+- **AI チャット**: OpenAI の Responses API を使用したインテリジェントな会話
+- **Vector Store 検索**: ファイルをアップロードして知識ベースとして活用
+- **RAG 機能**: 文書検索結果を元にした回答生成
+- **会話履歴管理**: チャット履歴の自動保存
 - **レスポンシブデザイン**: モバイル対応
-- **ローカルストレージ**: チャット履歴の自動保存
-- **ダークテーマ**: ChatGPT風のUI
+- **モダンUI**: ダークテーマ対応
 
 ### セットアップ手順
 
