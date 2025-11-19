@@ -244,11 +244,8 @@ export async function getOrCreateKnowledgeBase(apiKey) {
   }
 
   try {
-    // List all vector stores
-    const stores = await listVectorStores(apiKey, { limit: 100 })
-
-    // Find knowledge_base
-    const knowledgeBase = stores.find(store => store.name === 'knowledge_base')
+    // Return existing knowledge base if present
+    const knowledgeBase = await findKnowledgeBase(apiKey)
 
     if (knowledgeBase) {
       return knowledgeBase
@@ -258,6 +255,23 @@ export async function getOrCreateKnowledgeBase(apiKey) {
     return await createVectorStore(apiKey, 'knowledge_base')
   } catch (error) {
     throw new Error(error.message || 'knowledge_base の取得または作成中にエラーが発生しました。')
+  }
+}
+
+/**
+ * Retrieve the existing knowledge_base vector store if it exists.
+ * Returns the vector store object or null when not found.
+ */
+export async function findKnowledgeBase(apiKey) {
+  if (!apiKey || !apiKey.trim()) {
+    throw new Error('APIキーが設定されていません。設定から入力してください。')
+  }
+
+  try {
+    const stores = await listVectorStores(apiKey, { limit: 100 })
+    return stores.find(store => store.name === 'knowledge_base') || null
+  } catch (error) {
+    throw new Error(error.message || 'knowledge_base の取得中にエラーが発生しました。')
   }
 }
 
