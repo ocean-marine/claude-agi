@@ -76,7 +76,7 @@ npx gh-pages -d dist
 
 - GitHub の **Settings** → **Pages** に移動
 - **Source** を `gh-pages` ブランチに設定
-- 保存すると、`https://username.github.io/claude-agi/` でアクセス可能になります
+- 保存すると、`https://ocean-marine.github.io/claude-agi/` でアクセス可能になります
 
 ### プロジェクト構成
 
