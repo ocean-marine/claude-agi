@@ -2,7 +2,7 @@
   import MessageList from './MessageList.svelte'
   import ChatInput from './ChatInput.svelte'
   import { createEventDispatcher } from 'svelte'
-  import { callOpenAIResponses, callOpenAIFileSearch, getOrCreateKnowledgeBase } from '../services/aiService.js'
+  import { callOpenAIResponses, callOpenAIFileSearch, findKnowledgeBase } from '../services/aiService.js'
 
   export let apiKey = ''
 
@@ -25,9 +25,11 @@
     }
 
     try {
-      const knowledgeBase = await getOrCreateKnowledgeBase(apiKey)
-      knowledgeBaseId = knowledgeBase.id
-      console.log('Knowledge base initialized:', knowledgeBaseId)
+      const knowledgeBase = await findKnowledgeBase(apiKey)
+      knowledgeBaseId = knowledgeBase?.id || ''
+      if (knowledgeBaseId) {
+        console.log('Knowledge base initialized:', knowledgeBaseId)
+      }
     } catch (error) {
       console.error('Failed to initialize knowledge_base:', error)
     }

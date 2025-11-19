@@ -1,7 +1,7 @@
 <script>
   import { createEventDispatcher } from 'svelte'
   import {
-    getOrCreateKnowledgeBase,
+    findKnowledgeBase,
     listVectorStoreFiles,
     getFileMetadata,
     deleteVectorStoreFile
@@ -88,8 +88,16 @@
     filesError = ''
 
     try {
-      // Get or create knowledge_base
-      const knowledgeBase = await getOrCreateKnowledgeBase(key)
+      // Try to load existing knowledge_base without creating a new one
+      const knowledgeBase = await findKnowledgeBase(key)
+
+      if (!knowledgeBase) {
+        knowledgeBaseId = ''
+        files = []
+        filesError = 'knowledge_baseはまだ作成されていません。ファイルをアップロードすると自動で作成されます。'
+        return
+      }
+
       knowledgeBaseId = knowledgeBase.id
 
       // Load files
